@@ -46,11 +46,17 @@ public struct OSLogList: View {
                 }
             }
 
-            ToolbarItemGroup {
-                Button("Export", systemImage: "square.and.arrow.up") {
-                    viewModel.isExportPresented.toggle()
+            ToolbarItem {
+                Menu {
+                    Button("Export", systemImage: "square.and.arrow.up") {
+                        viewModel.isExportPresented.toggle()
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
                 }
+            }
 
+            ToolbarItem {
                 Button("Filter", systemImage: "line.3.horizontal.decrease.circle") {
                     viewModel.isFilterPresented.toggle()
                 }
@@ -65,8 +71,5 @@ public struct OSLogList: View {
                 viewModel.isLoading = false
             }
         })
-        .task {
-        }
-
     }
 }

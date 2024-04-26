@@ -29,16 +29,12 @@ struct OSLogFilterView: View {
                                     }
                                 }
                                 .contextMenu {
-                                    Button {
+                                    Button("Only Select \(name)") {
                                         viewModel.selectedSubsystems = [name]
-                                    } label: {
-                                        Label("Only select", systemImage: "heart")
                                     }
 
-                                    Button {
+                                    Button("Select All") {
                                         viewModel.selectAllSubsystems()
-                                    } label: {
-                                        Label("Select All", systemImage: "heart")
                                     }
                                 }
                                 .padding(.leading, 5)
@@ -75,16 +71,12 @@ struct OSLogFilterView: View {
                                     }
                                 }
                                 .contextMenu {
-                                    Button {
+                                    Button("Only Select \(name)") {
                                         viewModel.selectedCategories = [name]
-                                    } label: {
-                                        Label("Only select", systemImage: "heart")
                                     }
 
-                                    Button {
+                                    Button("Select All") {
                                         viewModel.selectAllCategories()
-                                    } label: {
-                                        Label("Select All", systemImage: "heart")
                                     }
                                 }
                                 .padding(.leading, 5)
@@ -97,7 +89,7 @@ struct OSLogFilterView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(Color.white)
+        .background(Color(uiColor: .systemBackground))
     }
 }
 
