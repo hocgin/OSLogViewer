@@ -17,7 +17,7 @@ struct OSLogEntryRow: View {
     let entry: OSLogEntryLog
 
     @EnvironmentObject
-    private var viewModel: OSLogList.ViewModel
+    private var viewModel: OSLogViewer.ViewModel
 
     var body: some View {
         VStack(alignment: .leading) {

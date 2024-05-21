@@ -3,7 +3,7 @@ import SwiftUI
 struct OSLogFilterView: View {
 
     @EnvironmentObject
-    private var viewModel: OSLogList.ViewModel
+    private var viewModel: OSLogViewer.ViewModel
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
@@ -94,7 +94,7 @@ struct OSLogFilterView: View {
 }
 
 #Preview {
-    let viewModel = OSLogList.ViewModel()
+    let viewModel = OSLogViewer.ViewModel()
     viewModel.allSubsystems = ["A", "B", "C"]
     viewModel.allCategories = ["a", "b", "c"]
 

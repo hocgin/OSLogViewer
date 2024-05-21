@@ -1,14 +1,16 @@
 import SwiftUI
 import OSLog
+import Combine
 
-extension OSLogList {
+extension OSLogViewer {
     
-    @MainActor
     final class ViewModel: ObservableObject {
 
         private let logStore: OSLogStore = try! OSLogStore(scope: .currentProcessIdentifier)
 
         @Published var entries: [OSLogEntryLog] = []
+
+        @Published var searchForEntries: [OSLogEntryLog] = []
 
         @Published var allCategories = [String]()
 
@@ -26,14 +28,30 @@ extension OSLogList {
 
         @Published var searchText: String = ""
 
+        private var cancellables = Set<AnyCancellable>()
+
+        init() {
+            $searchText.map { [self] text in
+                entries.filter { log in
+                    log.composedMessage.lowercased().contains(searchText.lowercased())
+                }
+            }
+            .debounce(for: .milliseconds(200), scheduler: RunLoop.main)
+            .receive(on: RunLoop.main)
+            .assign(to: \ViewModel.searchForEntries, on: self)
+            .store(in: &cancellables)
+        }
+
         func reload() async {
-//            isLoading = true
+            await MainActor.run {
+                isLoading = true
+            }
 
             let date = Date.now.addingTimeInterval(-24 * 3600)
             let position = logStore.position(date: date)
 
             do {
-                entries = try logStore.loadLogs(for: .init(position: position))
+                let entries = try logStore.loadLogs(for: .init(position: position))
 
                 var tmpSubsystems = Set<String>()
 
@@ -49,31 +67,39 @@ extension OSLogList {
                     }
                 }
 
-                allSubsystems = Array(tmpSubsystems).sorted()
+                let allSubsystems = Array(tmpSubsystems).sorted()
 
-                selectAllSubsystems()
+                let allCategories =  Array(tmpCategories).sorted()
 
-                allCategories =  Array(tmpCategories).sorted()
+                await MainActor.run {
+                    self.entries = entries
+                    self.allSubsystems = allSubsystems
+                    self.allCategories = allCategories
 
-                selectAllCategories()
+                    selectAllSubsystems()
+
+                    selectAllCategories()
+
+                    isLoading = false
+                }
             } catch  {
 
             }
+        }
 
-//            isLoading = false
+        var preferredEntries: [OSLogEntryLog] {
+            if searchText.isEmpty {
+                entries
+            } else {
+                searchForEntries
+            }
         }
 
         var filteredEntries: [OSLogEntryLog] {
-            entries.filter { log in
+            preferredEntries.filter { log in
                 selectedSubsystems.contains(log.subsystem)
             }.filter { log in
                 selectedCategories.contains(log.category)
-            }.filter { log in
-                if searchText.isEmpty {
-                    return true
-                } else {
-                    return log.composedMessage.lowercased().contains(searchText.lowercased())
-                }
             }
         }
 
