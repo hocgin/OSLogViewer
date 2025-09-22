@@ -17,6 +17,7 @@ public struct OSLogViewer: View {
             List(viewModel.displayLogs, id: \.self) { entry in
                 OSLogEntryRow(entry: entry)
             }
+            .environmentObject(viewModel)
             .listStyle(.plain)
             .refreshable {
                 await viewModel.reload()
