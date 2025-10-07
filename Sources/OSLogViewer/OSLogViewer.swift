@@ -1,10 +1,12 @@
-import SwiftUI
-import OSLog
 import Combine
+import OSLog
+import SwiftUI
 
 public struct OSLogViewer: View {
-
-    public init() { }
+    let isNavigation: Bool
+    public init(_ isNavigation: Bool = true) {
+        self.isNavigation = isNavigation
+    }
 
     @StateObject
     private var viewModel = ViewModel()
@@ -28,11 +30,17 @@ public struct OSLogViewer: View {
                     ProgressView()
                 }
             }
-
-            if viewModel.isFilterPresented {
-                OSLogFilterView()
-                    .environmentObject(viewModel)
-                    .frame(maxHeight: 300)
+            .padding(.top)
+            
+            VStack {
+                if !isNavigation {
+                    defaultToolbar2
+                }
+                if viewModel.isFilterPresented {
+                    OSLogFilterView()
+                        .environmentObject(viewModel)
+                        .frame(maxHeight: 300)
+                }
             }
         }
         .navigationTitle("OSLog Viewer")
@@ -78,12 +86,32 @@ public struct OSLogViewer: View {
             }
         }
     }
+
+    var defaultToolbar2: some View {
+        HStack {
+            Button("Close") {
+                dismiss()
+            }
+            Spacer(minLength: .zero)
+            HStack {
+                Menu {
+                    Button("Export", systemImage: "square.and.arrow.up") {
+                        viewModel.isExportPresented.toggle()
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+                Button("Filter", systemImage: "line.3.horizontal.decrease.circle") {
+                    viewModel.isFilterPresented.toggle()
+                }
+            }
+        }
+        .padding(.horizontal)
+    }
 }
 
 extension OSLogViewer {
-
     @MainActor final class ViewModel: ObservableObject {
-
         private let logStore: OSLogStore = try! OSLogStore(scope: .currentProcessIdentifier)
 
         @Published var displayLogs: [OSLogEntryLog] = []
@@ -111,7 +139,7 @@ extension OSLogViewer {
         private var cancellables = Set<AnyCancellable>()
 
         init() {
-            $searchText.map { [self] text in
+            $searchText.map { [self] _ in
                 if searchText.isEmpty {
                     entries.filter { log in
                         selectedSubsystems.contains(log.subsystem)
@@ -138,7 +166,7 @@ extension OSLogViewer {
 
                 self.entries = entries
 
-                self.displayLogs = self.entries
+                displayLogs = self.entries
 
                 selectAllSubsystems()
 
@@ -153,19 +181,19 @@ extension OSLogViewer {
 
             var tmpCategories = Set<String>()
 
-            logs.forEach { log in
-                if !tmpSubsystems.contains(log.subsystem) && !log.subsystem.isEmpty {
+            for log in logs {
+                if !tmpSubsystems.contains(log.subsystem), !log.subsystem.isEmpty {
                     tmpSubsystems.insert(log.subsystem)
                 }
 
-                if !tmpCategories.contains(log.category) && !log.category.isEmpty  {
+                if !tmpCategories.contains(log.category), !log.category.isEmpty {
                     tmpCategories.insert(log.category)
                 }
             }
 
             let allSubsystems = Array(tmpSubsystems).sorted()
 
-            let allCategories =  Array(tmpCategories).sorted()
+            let allCategories = Array(tmpCategories).sorted()
 
             await MainActor.run {
                 self.allSubsystems = allSubsystems
@@ -173,14 +201,14 @@ extension OSLogViewer {
             }
         }
 
-         func updateSelectLog()  {
+        func updateSelectLog() {
             let tmp = entries.filter { log in
                 selectedSubsystems.contains(log.subsystem)
             }.filter { log in
                 selectedCategories.contains(log.category)
             }
 
-             displayLogs = tmp
+            displayLogs = tmp
         }
 
         func selectAllSubsystems() {
@@ -193,7 +221,16 @@ extension OSLogViewer {
     }
 }
 
+#if DEBUG
+#Preview {
+    if #available(iOS 16, *) {
+        NavigationStack {
+            OSLogViewer()
+        }
+    }
+}
 
 #Preview {
-    OSLogViewer()
+    OSLogViewer(false)
 }
+#endif
