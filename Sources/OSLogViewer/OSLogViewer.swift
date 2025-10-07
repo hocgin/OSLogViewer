@@ -16,30 +16,38 @@ public struct OSLogViewer: View {
 
     public var body: some View {
         ZStack(alignment: .topLeading) {
-            List(viewModel.displayLogs, id: \.self) { entry in
-                OSLogEntryRow(entry: entry)
-            }
-            .environmentObject(viewModel)
-            .listStyle(.plain)
-            .refreshable {
-                await viewModel.reload()
-            }
-            .searchable(text: $viewModel.searchText)
-            .overlay {
-                if viewModel.isLoading {
-                    ProgressView()
-                }
-            }
-            .padding(.top)
-            
             VStack {
-                if !isNavigation {
-                    defaultToolbar2
+                VStack {
+                    if !isNavigation {
+                        defaultToolbar2
+                    }
+                    if viewModel.isFilterPresented {
+                        OSLogFilterView()
+                            .environmentObject(viewModel)
+                            .frame(maxHeight: 300)
+                    }
                 }
-                if viewModel.isFilterPresented {
-                    OSLogFilterView()
-                        .environmentObject(viewModel)
-                        .frame(maxHeight: 300)
+                List(viewModel.displayLogs, id: \.self) { entry in
+                    OSLogEntryRow(entry: entry)
+                }
+                .environmentObject(viewModel)
+                .listStyle(.plain)
+                .refreshable {
+                    await viewModel.reload()
+                }
+                .searchable(text: $viewModel.searchText)
+                .overlay {
+                    if viewModel.isLoading {
+                        ProgressView()
+                    }
+                }
+                ///
+                if !isNavigation {
+                    TextField("搜索", text: $viewModel.searchText)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical)
+                        .padding(.horizontal)
+                        .background(.background)
                 }
             }
         }
